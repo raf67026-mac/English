@@ -205,9 +205,56 @@ const KERN_MODE = {"scope": "full"};
     document.body.appendChild(footer);
   }
 
+  /**
+   * Safari treats a page opened directly as a local file (file://) very
+   * restrictively: localStorage there is often NOT kept between visits (it
+   * can look fine during one visit, then be completely empty the next time
+   * the same file is reopened, unlike a normal https:// site). That makes
+   * the progress dashboard look "disconnected" from what the student just
+   * did, even though nothing is actually broken in the app — Chrome and
+   * Edge do not have this restriction. This is a one-time, dismissible,
+   * non-blocking notice — shown only for this exact situation (file:// +
+   * Safari) — pointing at the two real fixes: run a local server while
+   * testing, or use the site once it's hosted online (GitHub Pages, etc.),
+   * where this never happens because the page is no longer file://.
+   *
+   * يتعامل Safari مع صفحة مفتوحة مباشرة كملف محلي (file://) بتقييد شديد:
+   * غالبًا لا يُحفظ فيه localStorage بين الزيارات (قد يبدو يعمل أثناء
+   * الزيارة نفسها، ثم يكون فارغًا تمامًا عند إعادة فتح نفس الملف لاحقًا،
+   * بخلاف موقع https:// عادي). هذا يجعل لوحة التقدم تبدو "منفصلة" عمّا
+   * فعله الطالب فعليًا رغم أن شيئًا لا يعمل بشكل خاطئ فعليًا في التطبيق —
+   * Chrome وEdge لا يملكان هذا القيد. هذا تنبيه لمرة واحدة، قابل للإغلاق،
+   * غير معيق — يظهر فقط في هذه الحالة تحديدًا (file:// + Safari) — يشير
+   * إلى الحلين الحقيقيين: تشغيل خادم محلي أثناء الاختبار، أو استخدام
+   * الموقع بعد استضافته على الإنترنت (GitHub Pages مثلًا)، حيث لا تحدث
+   * هذه المشكلة أبدًا لأن الصفحة لم تعد file://.
+   */
+  function injectFileProtocolNotice() {
+    const isFileProtocol = location.protocol === "file:";
+    const isSafari = /^((?!chrome|crios|fxios|edg|android).)*safari/i.test(navigator.userAgent || "");
+    if (!isFileProtocol || !isSafari) return;
+    const notice = document.createElement("div");
+    notice.className = "file-protocol-notice";
+    notice.innerHTML = `
+      <div class="container row gap-3" style="align-items:flex-start">
+        <span style="font-size:1.2rem;line-height:1">⚠️</span>
+        <p class="text-small" style="flex:1;margin:0">
+          <span class="en" lang="en">Opened directly as a file in Safari: your saved progress may not be kept between visits (a Safari limitation with local files, not a bug in the course). To save progress reliably, run a local server while testing, or use the site once it's hosted online.</span><br>
+          <span class="ar" lang="ar">تم فتح الملف مباشرة في Safari: قد لا يُحفظ تقدمك المحفوظ بين الزيارات (قيد من Safari مع الملفات المحلية، وليس خللًا في الدورة). لحفظ تقدمك بثقة، شغّل خادمًا محليًا أثناء الاختبار، أو استخدم الموقع بعد استضافته على الإنترنت.</span>
+        </p>
+        <button type="button" class="file-protocol-notice-close" aria-label="Close · إغلاق">✕</button>
+      </div>`;
+    // Insert right after the header if present (call this after
+    // injectHeader()), otherwise at the very top of the page.
+    const header = document.querySelector(".site-header");
+    if (header) header.insertAdjacentElement("afterend", notice);
+    else document.body.prepend(notice);
+    notice.querySelector(".file-protocol-notice-close").addEventListener("click", () => notice.remove());
+  }
+
   global.KernApp = {
     qs, qp, rootPath, fetchJSON, loadManifest,
-    injectHeader, injectFooter, updateActiveNav,
+    injectHeader, injectFooter, injectFileProtocolNotice, updateActiveNav,
     levelColorClass, setLevelClass
   };
 })(window);
@@ -2554,6 +2601,7 @@ const KERN_MODE = {"scope": "full"};
   window.addEventListener("DOMContentLoaded", () => {
     KernApp.injectHeader();
     KernApp.injectFooter();
+    KernApp.injectFileProtocolNotice();
     render();
   });
 })(window);

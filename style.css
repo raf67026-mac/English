@@ -237,6 +237,19 @@ a { color: var(--kern-navy-700); }
   .nav-toggle { display: block; }
 }
 
+/* ---- Local-file (Safari) storage notice ---- */
+.file-protocol-notice {
+  background: var(--kern-gold-100); border-bottom: 1px solid var(--kern-gold);
+  padding-block: var(--sp-3); position: sticky; top: 64px; z-index: 40;
+}
+.file-protocol-notice .container { align-items: flex-start; }
+.file-protocol-notice-close {
+  background: none; border: 0; cursor: pointer; font-size: 1rem; line-height: 1;
+  color: var(--kern-ink-soft); padding: 2px 6px; border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.file-protocol-notice-close:hover { background: rgba(0,0,0,.06); }
+
 /* ---- Footer (KERN copyright — required on every page) ---- */
 .site-footer { background: var(--kern-navy); color: rgba(255,255,255,.75); padding-block: var(--sp-6); margin-top: var(--sp-8); }
 .site-footer .container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-small); }
@@ -300,6 +313,29 @@ a { color: var(--kern-navy-700); }
 .callout--reallife { background: var(--kern-gold-100); border-inline-start: 4px solid var(--kern-gold); }
 .callout--tip { background: #E7F5EE; border-inline-start: 4px solid var(--kern-success); }
 .mistake-row { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: start; margin-block: 6px; }
+
+/* ---- List markers (bullets / numbers) ----
+   Fix (layout only, content unchanged): every content list here (Learning
+   Objectives, Practice, Listening/Reading questions, the Writing/Self-Check
+   checklists, Project Objectives) holds a bilingual item — English first,
+   left-aligned (see .bilingual/.en above), Arabic gloss underneath. The
+   list itself was left to inherit the page's RTL direction, so the
+   browser drew its own bullet/number for the "start" edge of an RTL box —
+   landing right on top of the left-aligned English line's first letter
+   instead of beside it, in every browser tested. Same root cause as the
+   vocabulary-card fix above (an RTL container holding LTR-first content
+   with nothing telling the marker which side to sit on); same fix: give
+   the list itself an explicit LTR flow so the native marker always gets
+   its own reserved space to the left of the text. `.nav-links` (the
+   plain horizontal header nav, no markers) and `.project-steps` (its own
+   hand-drawn numbered circle via ::before, already direction-safe) are
+   deliberately left untouched. */
+ul:not(.nav-links):not(.project-steps),
+ol:not(.project-steps) {
+  direction: ltr;
+  text-align: left;
+  padding-inline-start: 22px;
+}
 
 /* ---- Vocabulary card ----
    Fix (layout only, content unchanged): the card is pinned to LTR/left flow
